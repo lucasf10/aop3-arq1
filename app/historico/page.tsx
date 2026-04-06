@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BarChart3, TrendingUp, TrendingDown } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Search } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -25,7 +25,13 @@ import {
   AreaChart,
   Area,
 } from "recharts";
-import { useCombustiveis, usePostos } from "@/hooks/use-database";
+import {
+  useBairros,
+  useColetas,
+  useCombustiveis,
+  usePostos,
+} from "@/hooks/use-database";
+import { DataTable } from "@/components/data-table";
 
 const COLORS = ["#22c55e", "#f97316", "#3b82f6", "#a855f7"];
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
@@ -36,6 +42,8 @@ export default function HistoricoPage() {
   const [chartType, setChartType] = useState<string>("line");
   const { postos } = usePostos();
   const { combustiveis } = useCombustiveis();
+  const { bairros } = useBairros();
+  const { coletas, isLoading: loadingColetas } = useColetas();
   const { data, isLoading } = useSWR(
     `/api/historico?postoId=${postoId}&combustivelId=${combustivelId}&includeAll=true`,
     fetcher,
@@ -54,6 +62,12 @@ export default function HistoricoPage() {
     const [year, month, day] = dateStr.split("-");
     return `${day}/${month}`;
   };
+
+  const formatDateTime = (dateStr: string) => {
+    const date = new Date(dateStr.replace(" ", "T"));
+    return date.toLocaleString("pt-BR");
+  };
+
   const formatCurrency = (value: number) =>
     value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -69,6 +83,51 @@ export default function HistoricoPage() {
     const trend = prices[prices.length - 1] - prices[0];
     return { minPrice, maxPrice, avgPrice, variation, trend };
   }, [history]);
+
+  const coletaColumns = [
+    {
+      key: "combustivel" as const,
+      label: "Combustivel",
+      sortable: true,
+      filterable: true,
+      filterOptions: (combustiveis ?? []).map((c) => c.nome),
+    },
+    {
+      key: "posto" as const,
+      label: "Posto",
+      sortable: true,
+      filterable: true,
+      filterOptions: (postos ?? []).map((p) => p.nome),
+    },
+    {
+      key: "bairro" as const,
+      label: "Bairro",
+      sortable: true,
+      filterable: true,
+      filterOptions: (bairros ?? []).map((b) => b.nome),
+    },
+    {
+      key: "data_coleta" as const,
+      label: "Data/Hora da Coleta",
+      sortable: true,
+      render: (value: unknown) => (
+        <span className="text-muted-foreground">
+          {formatDateTime(String(value))}
+        </span>
+      ),
+    },
+    {
+      key: "preco" as const,
+      label: "Valor",
+      sortable: true,
+      className: "text-right",
+      render: (value: unknown) => (
+        <span className="font-semibold text-primary">
+          {formatCurrency(Number(value))}
+        </span>
+      ),
+    },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -335,6 +394,28 @@ export default function HistoricoPage() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Search className="w-5 h-5 text-primary" />
+              Historico de Coletas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loadingColetas ? (
+              <p className="text-muted-foreground">
+                Carregando dados do banco...
+              </p>
+            ) : (
+              <DataTable
+                data={coletas ?? []}
+                columns={coletaColumns}
+                searchPlaceholder="Buscar por posto, bairro ou combustivel..."
+              />
             )}
           </CardContent>
         </Card>

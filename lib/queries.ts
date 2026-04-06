@@ -238,3 +238,29 @@ export async function getComparativoTodosCombustiveis(postoId?: number) {
   const [rows] = await pool.query(sql, params);
   return rows as Array<{ data: string; combustivel: string; preco: number }>;
 }
+
+export async function getColetas() {
+  const [rows] = await pool.query(`
+    SELECT
+      c.id_coleta AS id,
+      tc.nome AS combustivel,
+      p.nome AS posto,
+      b.nome AS bairro,
+      DATE_FORMAT(c.data_hora, '%Y-%m-%d %H:%i:%s') AS data_coleta,
+      c.valor AS preco
+    FROM Coleta c
+    JOIN Posto p ON c.id_posto = p.id_posto
+    JOIN Bairro b ON p.id_bairro = b.id_bairro
+    JOIN TipoCombustivel tc ON c.id_combustivel = tc.id_combustivel
+    ORDER BY c.data_hora DESC
+  `);
+
+  return rows as Array<{
+    id: number;
+    combustivel: string;
+    posto: string;
+    bairro: string;
+    data_coleta: string;
+    preco: number;
+  }>;
+}

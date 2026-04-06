@@ -15,6 +15,15 @@ export interface Combustivel {
   nome: string;
 }
 
+export interface Coleta {
+  id: number;
+  combustivel: string;
+  posto: string;
+  bairro: string;
+  data_coleta: string;
+  preco: number;
+}
+
 export interface Preco {
   id: number;
   preco: number;
@@ -90,6 +99,11 @@ export function useCombustiveis() {
     fetcher,
   );
   return { combustiveis: data, error, isLoading };
+}
+
+export function useColetas() {
+  const { data, error, isLoading } = useSWR<Coleta[]>("/api/coletas", fetcher);
+  return { coletas: data, error, isLoading };
 }
 
 export function usePrecos() {
