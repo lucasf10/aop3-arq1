@@ -3,7 +3,7 @@
 Projeto desenvolvido para a disciplina **Arquitetura de Dados Relacionais I**.
 
 ## Deploy
-https://aop3arg1vercel.app
+https://aop3arg1.vercel.app
 
 
 ## Tecnologias
