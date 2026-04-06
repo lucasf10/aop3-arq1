@@ -9,7 +9,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Preço Combustível - Vila Velha ES",
   description:
-    "Consulta de preços de combustíveis em Vila Velha - ES. Projeto para a AOP02 de Arquitetura de Dados Relacionais I.",
+    "Consulta de preços de combustíveis em Vila Velha - ES. Projeto para a AOP03 de Arquitetura de Dados Relacionais I.",
   icons: {
     icon: [
       {
