@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,6 +33,8 @@ interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
   searchPlaceholder?: string;
+  hasPagination?: boolean;
+  pageSize?: number;
 }
 
 type SortDirection = "asc" | "desc" | null;
@@ -41,11 +43,15 @@ export function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   searchPlaceholder = "Buscar...",
+  hasPagination,
+  pageSize,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortKey, setSortKey] = useState<keyof T | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = pageSize ?? 10;
 
   const filterableColumns = columns.filter(
     (col) => col.filterable && col.filterOptions,
@@ -90,6 +96,20 @@ export function DataTable<T extends Record<string, unknown>>({
 
     return result;
   }, [data, search, filters, sortKey, sortDirection, columns]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data, search, filters, sortKey, sortDirection]);
+
+  const totalItems = filteredAndSortedData.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+  const paginatedData = hasPagination
+    ? filteredAndSortedData.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage,
+      )
+    : filteredAndSortedData;
 
   const handleSort = (key: keyof T) => {
     if (sortKey === key) {
@@ -175,7 +195,7 @@ export function DataTable<T extends Record<string, unknown>>({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredAndSortedData.length === 0 ? (
+            {paginatedData.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
@@ -185,7 +205,7 @@ export function DataTable<T extends Record<string, unknown>>({
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAndSortedData.map((row, index) => (
+              paginatedData.map((row, index) => (
                 <TableRow key={index}>
                   {columns.map((col) => (
                     <TableCell key={String(col.key)} className={col.className}>
@@ -200,6 +220,39 @@ export function DataTable<T extends Record<string, unknown>>({
           </TableBody>
         </Table>
       </div>
+      {hasPagination && totalItems > 0 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Mostrando {paginatedData.length} de {totalItems} resultados
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="rounded-md border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Anterior
+            </button>
+
+            <span className="text-sm text-muted-foreground">
+              Página {currentPage} de {totalPages}
+            </span>
+
+            <button
+              type="button"
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+              disabled={currentPage === totalPages}
+              className="rounded-md border border-border px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

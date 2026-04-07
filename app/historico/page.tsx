@@ -415,6 +415,8 @@ export default function HistoricoPage() {
                 data={coletas ?? []}
                 columns={coletaColumns}
                 searchPlaceholder="Buscar por posto, bairro ou combustivel..."
+                hasPagination
+                pageSize={10}
               />
             )}
           </CardContent>
